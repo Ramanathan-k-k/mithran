@@ -8,7 +8,7 @@ const groups = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-background py-16 md:py-24">
+    <footer className="border-t border-border bg-background/70 py-16 backdrop-blur-md md:py-24">
       <div className="mx-auto max-w-[1480px] px-4 md:px-8">
         <div className="grid gap-14 md:grid-cols-12">
           <div className="md:col-span-4">

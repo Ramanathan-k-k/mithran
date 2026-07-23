@@ -11,7 +11,7 @@ const services = [
 
 export function Bespoke() {
   return (
-    <section id="services" className="bg-foreground py-24 text-background md:py-36">
+    <section id="services" className="bg-foreground/85 py-24 text-background backdrop-blur-md md:py-36">
       <div className="mx-auto max-w-[1480px] px-4 md:px-8">
         <div className="grid gap-8 md:grid-cols-12">
           <div className="md:col-span-4">
