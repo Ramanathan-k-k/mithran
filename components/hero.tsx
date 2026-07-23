@@ -1,18 +1,17 @@
-import Image from 'next/image'
 import { ArrowDownRight } from 'lucide-react'
+import { ParallaxImage } from '@/components/parallax'
 
 export function Hero() {
   return (
     <section id="top" className="px-3 pb-20 md:px-6 md:pb-32">
-      <div className="relative min-h-[72svh] overflow-hidden bg-muted md:min-h-[82svh]">
-        <Image
-          src="/images/oonjal-hero.png"
-          alt="A hand-carved teak Oonjal swing in a sunlit Chettinad courtyard"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
+      <ParallaxImage
+        src="/images/oonjal-hero.png"
+        alt="A hand-carved teak Oonjal swing in a sunlit Chettinad courtyard"
+        priority
+        sizes="100vw"
+        speed={0.16}
+        className="min-h-[72svh] md:min-h-[82svh]"
+      >
         <div className="absolute inset-0 bg-foreground/25" aria-hidden="true" />
         <div className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-7 p-6 text-background md:p-12 lg:p-16">
           <p className="text-[10px] uppercase tracking-[0.24em]">The Karaikudi collection · 2026</p>
@@ -28,7 +27,7 @@ export function Hero() {
             </a>
           </div>
         </div>
-      </div>
+      </ParallaxImage>
     </section>
   )
 }

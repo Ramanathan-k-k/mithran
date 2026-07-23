@@ -1,6 +1,7 @@
 import { Bespoke } from '@/components/bespoke'
 import { Collections } from '@/components/collections'
 import { Hero } from '@/components/hero'
+import { ParallaxBand } from '@/components/parallax-band'
 import { SiteFooter } from '@/components/site-footer'
 import { SiteNav } from '@/components/site-nav'
 import { StoreOverlays } from '@/components/store-overlays'
@@ -15,6 +16,7 @@ export default function Page() {
         <Hero />
         <Collections />
         <Story />
+        <ParallaxBand />
         <Bespoke />
       </main>
       <SiteFooter />

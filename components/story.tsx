@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import { ParallaxImage } from '@/components/parallax'
 
 const details = [
   ['Atelier-made', 'New pieces drawn in our studio and made in limited runs by our circle of craftspeople.'],
@@ -21,9 +21,13 @@ export function Story() {
             </p>
           </div>
           <div className="md:col-span-6 md:col-start-7">
-            <div className="relative aspect-[4/5] overflow-hidden bg-muted">
-              <Image src="/images/antique-cabinet.png" alt="A restored antique Karaikudi cabinet with original brass hardware" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
-            </div>
+            <ParallaxImage
+              src="/images/antique-cabinet.png"
+              alt="A restored antique Karaikudi cabinet with original brass hardware"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              speed={0.14}
+              className="aspect-[4/5]"
+            />
           </div>
         </div>
 
