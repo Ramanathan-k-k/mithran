@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
 type PanelName = 'menu' | 'login' | null
 
@@ -10,6 +10,7 @@ interface StoreState {
   panel: PanelName
   toast: string | null
   wishlistCount: number
+  wishlistReady: boolean
   cartCount: number
   isWished: (id: string) => boolean
   toggleWish: (id: string, label: string) => void
@@ -25,6 +26,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<string[]>([])
   const [panel, setPanel] = useState<PanelName>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [wishlistReady, setWishlistReady] = useState(false)
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem('mithrans-wishlist')
+      if (saved) {
+        const parsed: unknown = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.every((item) => typeof item === 'string')) {
+          setWishlist(parsed)
+        }
+      }
+    } catch {
+      window.localStorage.removeItem('mithrans-wishlist')
+    } finally {
+      setWishlistReady(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (wishlistReady) {
+      window.localStorage.setItem('mithrans-wishlist', JSON.stringify(wishlist))
+    }
+  }, [wishlist, wishlistReady])
 
   const flash = useCallback((message: string) => {
     setToast(message)
@@ -61,6 +85,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       panel,
       toast,
       wishlistCount: wishlist.length,
+      wishlistReady,
       cartCount: cart.length,
       isWished: (id) => wishlist.includes(id),
       toggleWish,
@@ -68,7 +93,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       openPanel: (name) => setPanel(name),
       closePanel: () => setPanel(null),
     }),
-    [wishlist, cart, panel, toast, toggleWish, addToCart],
+    [wishlist, wishlistReady, cart, panel, toast, toggleWish, addToCart],
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

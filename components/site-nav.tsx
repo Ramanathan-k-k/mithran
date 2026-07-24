@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import { Heart, Menu, Search, ShoppingBag, UserRound, X } from 'lucide-react'
 import { useStore } from '@/components/store-provider'
 
@@ -22,7 +23,9 @@ function Count({ children }: { children: number }) {
 
 export function SiteNav() {
   const { wishlistCount, cartCount, panel, openPanel, closePanel } = useStore()
+  const pathname = usePathname()
   const menuOpen = panel === 'menu'
+  const homeHref = (hash: string) => (pathname === '/' ? hash : `/${hash}`)
 
   return (
     <header className="relative z-50 bg-background">
@@ -45,13 +48,13 @@ export function SiteNav() {
 
         <nav className="hidden items-center gap-7 md:flex" aria-label="Primary">
           {links.map(([href, label]) => (
-            <a key={href} href={href} className="text-[11px] uppercase tracking-[0.16em] transition-colors hover:text-primary">
+            <a key={href} href={homeHref(href)} className="text-[11px] uppercase tracking-[0.16em] transition-colors hover:text-primary">
               {label}
             </a>
           ))}
         </nav>
 
-        <a href="#top" aria-label="Mithran's Atelier home" className="absolute left-1/2 -translate-x-1/2">
+        <a href={homeHref('#top')} aria-label="Mithran's Atelier home" className="absolute left-1/2 -translate-x-1/2">
           <Image
             src="/images/mithrans-atelier-logo.png"
             alt="Mithran's Atelier"
@@ -63,10 +66,10 @@ export function SiteNav() {
         </a>
 
         <div className="ml-auto flex items-center gap-1 md:gap-3">
-          <a href="#published" className="hidden size-10 items-center justify-center sm:flex" aria-label="Search published pieces">
+          <a href={homeHref('#published')} className="hidden size-10 items-center justify-center sm:flex" aria-label="Search published pieces">
             <Search aria-hidden="true" />
           </a>
-          <a href="#published" className="relative flex size-10 items-center justify-center" aria-label={`Wishlist, ${wishlistCount} items`}>
+          <a href="/favorites" className="relative flex size-10 items-center justify-center" aria-label={`Favorites, ${wishlistCount} items`}>
             <Heart aria-hidden="true" />
             <Count>{wishlistCount}</Count>
           </a>
@@ -83,7 +86,7 @@ export function SiteNav() {
       <div className="hidden border-y border-border px-8 py-3 md:block">
         <nav className="mx-auto flex max-w-5xl items-center justify-center gap-10" aria-label="Categories">
           {['Seating', 'Tables', 'Swings', 'Storage', 'Antiques'].map((label) => (
-            <a key={label} href={`#category-${label.toLowerCase()}`} className="text-[10px] uppercase tracking-[0.18em] transition-colors hover:text-primary">
+            <a key={label} href={homeHref(`#category-${label.toLowerCase()}`)} className="text-[10px] uppercase tracking-[0.18em] transition-colors hover:text-primary">
               {label}
             </a>
           ))}
@@ -94,7 +97,7 @@ export function SiteNav() {
         <nav id="mobile-menu" aria-label="Mobile" className="absolute inset-x-0 top-full border-y border-border bg-background px-5 py-5 shadow-sm md:hidden">
           <div className="flex flex-col">
             {links.map(([href, label]) => (
-              <a key={href} href={href} onClick={closePanel} className="border-b border-border py-4 font-serif text-3xl text-heading">
+              <a key={href} href={homeHref(href)} onClick={closePanel} className="border-b border-border py-4 font-serif text-3xl text-heading">
                 {label}
               </a>
             ))}
