@@ -1,10 +1,11 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { Heart, ShoppingBag } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useStore } from '@/components/store-provider'
-import { AVAILABILITY_LABEL, formatINR, PIECES } from '@/lib/catalog'
+import { AVAILABILITY_LABEL, formatINR, getProductHref, PIECES } from '@/lib/catalog'
 
 export function FavoritesGallery() {
   const { wishlist, wishlistReady, toggleWish, addToCart } = useStore()
@@ -50,7 +51,8 @@ export function FavoritesGallery() {
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                       />
-                      <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-3">
+                      <Link href={getProductHref(piece)} aria-label={`View ${piece.name}`} className="absolute inset-0 z-[1]" />
+                      <div className="absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-3">
                         <div className="flex flex-wrap gap-2">
                           {piece.compareAt ? <span className="product-badge bg-primary text-primary-foreground">Sale</span> : null}
                           <span className="product-badge bg-background/90 text-foreground">{AVAILABILITY_LABEL[piece.availability]}</span>
@@ -69,7 +71,7 @@ export function FavoritesGallery() {
                     <div className="mt-5 flex items-start justify-between gap-5 border-t border-border pt-4">
                       <div>
                         <p className="eyebrow">{piece.category}</p>
-                        <h2 className="mt-2 font-serif text-3xl text-heading">{piece.name}</h2>
+                        <h2 className="mt-2 font-serif text-3xl text-heading"><Link href={getProductHref(piece)} className="transition-colors hover:text-primary">{piece.name}</Link></h2>
                         <p className="mt-2 max-w-sm text-xs leading-relaxed">{piece.description}</p>
                         <p className="mt-4 text-sm text-heading">
                           {piece.price === null ? 'Price on request' : formatINR(piece.price)}

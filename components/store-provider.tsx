@@ -32,7 +32,7 @@ const StoreContext = createContext<StoreState | null>(null)
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [wishlist, setWishlist] = useState<string[]>([])
-  const [cart, setCart] = useState<string[]>([])
+  const [cart, setCart] = useState<CartItem[]>([])
   const [panel, setPanel] = useState<PanelName>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [wishlistReady, setWishlistReady] = useState(false)
@@ -80,12 +80,36 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   )
 
   const addToCart = useCallback(
-    (id: string, label: string) => {
-      setCart((prev) => [...prev, id])
+    (id: string, label: string, options: Record<string, string> = {}) => {
+      const key = `${id}::${Object.keys(options)
+        .sort()
+        .map((name) => `${name}:${options[name]}`)
+        .join('|')}`
+      setCart((prev) => {
+        const existing = prev.find((item) => item.key === key)
+        if (existing) {
+          return prev.map((item) =>
+            item.key === key ? { ...item, quantity: item.quantity + 1 } : item,
+          )
+        }
+        return [...prev, { key, id, quantity: 1, options }]
+      })
       flash(`Added ${label} to cart`)
     },
     [flash],
   )
+
+  const updateCartQuantity = useCallback((key: string, quantity: number) => {
+    setCart((prev) =>
+      quantity <= 0
+        ? prev.filter((item) => item.key !== key)
+        : prev.map((item) => (item.key === key ? { ...item, quantity } : item)),
+    )
+  }, [])
+
+  const removeFromCart = useCallback((key: string) => {
+    setCart((prev) => prev.filter((item) => item.key !== key))
+  }, [])
 
   const value = useMemo<StoreState>(
     () => ({
@@ -95,14 +119,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toast,
       wishlistCount: wishlist.length,
       wishlistReady,
-      cartCount: cart.length,
+      cartCount: cart.reduce((sum, item) => sum + item.quantity, 0),
       isWished: (id) => wishlist.includes(id),
       toggleWish,
       addToCart,
+      updateCartQuantity,
+      removeFromCart,
       openPanel: (name) => setPanel(name),
       closePanel: () => setPanel(null),
     }),
-    [wishlist, wishlistReady, cart, panel, toast, toggleWish, addToCart],
+    [wishlist, wishlistReady, cart, panel, toast, toggleWish, addToCart, updateCartQuantity, removeFromCart],
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
