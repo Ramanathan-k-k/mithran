@@ -2,11 +2,18 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
-type PanelName = 'menu' | 'login' | null
+type PanelName = 'menu' | 'login' | 'cart' | null
+
+export interface CartItem {
+  key: string
+  id: string
+  quantity: number
+  options: Record<string, string>
+}
 
 interface StoreState {
   wishlist: string[]
-  cart: string[]
+  cart: CartItem[]
   panel: PanelName
   toast: string | null
   wishlistCount: number
@@ -14,7 +21,9 @@ interface StoreState {
   cartCount: number
   isWished: (id: string) => boolean
   toggleWish: (id: string, label: string) => void
-  addToCart: (id: string, label: string) => void
+  addToCart: (id: string, label: string, options?: Record<string, string>) => void
+  updateCartQuantity: (key: string, quantity: number) => void
+  removeFromCart: (key: string) => void
   openPanel: (name: Exclude<PanelName, null>) => void
   closePanel: () => void
 }
