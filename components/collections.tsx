@@ -2,21 +2,41 @@
 
 import Image from 'next/image'
 import { Check, ChevronDown, Heart, ShoppingBag, SlidersHorizontal } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import { useMemo, useRef, useState } from 'react'
 import { useStore } from '@/components/store-provider'
 import { AVAILABILITY_LABEL, CATEGORIES, formatINR, PIECES, type Category } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 
+const SERIES = [
+  { label: 'The Naarkali Series', pieces: ['naarkali'] },
+  { label: 'The Metthu-Naarkali Series', pieces: ['naarkali', 'padukkai'] },
+  { label: 'The Mesai Series', pieces: ['mesai'] },
+  { label: 'The Padukkai Series', pieces: ['padukkai'] },
+  { label: 'The Alamaari Series', pieces: ['karaikudi-console', 'antique-cabinet'] },
+  { label: 'The Oonjal Series', pieces: ['oonjal'] },
+  { label: 'The Kannadi Series', pieces: [] },
+  { label: 'The Thalluvandi Series', pieces: [] },
+  { label: 'The Paagangal Series', pieces: [] },
+] as const
+
+type SeriesLabel = (typeof SERIES)[number]['label']
+
 export function Collections() {
   const [category, setCategory] = useState<'All' | Category>('All')
+  const [series, setSeries] = useState<SeriesLabel | null>(null)
+  const sliderRef = useRef<HTMLDivElement>(null)
+  const dragRef = useRef({ active: false, startX: 0, scrollLeft: 0 })
   const [availability, setAvailability] = useState('all')
   const [sort, setSort] = useState('newest')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const { isWished, toggleWish, addToCart } = useStore()
 
   const visible = useMemo(() => {
+    const selectedSeries = SERIES.find((item) => item.label === series)
     const list = PIECES.filter((piece) =>
       (category === 'All' || piece.category === category) &&
+      (!selectedSeries || selectedSeries.pieces.some((id) => id === piece.id)) &&
       (availability === 'all' || piece.availability === availability),
     )
     return [...list].sort((a, b) => {
@@ -24,11 +44,28 @@ export function Collections() {
       if (sort === 'price-high') return (b.price ?? -1) - (a.price ?? -1)
       return b.published - a.published
     })
-  }, [category, availability, sort])
+  }, [category, series, availability, sort])
 
-  const selectCategory = (next: Category) => {
-    setCategory(next)
-    document.querySelector('#published')?.scrollIntoView({ behavior: 'smooth' })
+  const selectSeries = (next: SeriesLabel, button: HTMLButtonElement) => {
+    setSeries(next)
+    setCategory('All')
+    button.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  }
+
+  const beginDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const slider = sliderRef.current
+    if (!slider) return
+    dragRef.current = { active: true, startX: event.clientX, scrollLeft: slider.scrollLeft }
+  }
+
+  const dragSlider = (event: React.PointerEvent<HTMLDivElement>) => {
+    const slider = sliderRef.current
+    if (!slider || !dragRef.current.active) return
+    slider.scrollLeft = dragRef.current.scrollLeft - (event.clientX - dragRef.current.startX)
+  }
+
+  const endDrag = () => {
+    dragRef.current.active = false
   }
 
   return (
@@ -42,16 +79,38 @@ export function Collections() {
             </div>
             <p className="max-w-sm text-sm leading-relaxed">New furniture made in small runs, alongside exclusive antiques sourced across Chettinad.</p>
           </div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-            {CATEGORIES.map((item) => (
-              <button id={`category-${item.id.toLowerCase()}`} key={item.id} type="button" onClick={() => selectCategory(item.id)} className="group text-left focus-visible:outline-none">
-                <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-                  <Image src={item.image} alt={item.alt} fill sizes="(max-width: 768px) 50vw, 20vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.03] group-focus-visible:scale-[1.03]" />
-                </div>
-                <h3 className="mt-4 font-serif text-2xl text-heading">{item.id}</h3>
-                <p className="mt-1 hidden text-xs leading-relaxed md:block">{item.blurb}</p>
-              </button>
-            ))}
+          <div
+            ref={sliderRef}
+            role="tablist"
+            aria-label="Furniture series"
+            onPointerDown={beginDrag}
+            onPointerMove={dragSlider}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+            className="flex cursor-grab snap-x snap-mandatory gap-3 overflow-x-auto pb-2 active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {SERIES.map((item) => {
+              const active = series === item.label
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={(event) => selectSeries(item.label, event.currentTarget)}
+                  className="relative shrink-0 snap-center overflow-hidden rounded-full border border-border px-5 py-3 text-sm text-heading transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {active ? (
+                    <motion.span
+                      layoutId="active-series"
+                      className="absolute inset-0 bg-foreground"
+                      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                    />
+                  ) : null}
+                  <span className={cn('relative transition-colors', active && 'text-background')}>{item.label}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -86,7 +145,7 @@ export function Collections() {
                 <legend className="eyebrow mb-3">Category</legend>
                 <div className="flex flex-wrap gap-2">
                   {(['All', ...CATEGORIES.map((item) => item.id)] as const).map((item) => (
-                    <button key={item} type="button" onClick={() => setCategory(item)} className={cn('filter-chip', category === item && 'bg-foreground text-background')}>
+                    <button key={item} type="button" onClick={() => { setCategory(item); setSeries(null) }} className={cn('filter-chip', category === item && !series && 'bg-foreground text-background')}>
                       {category === item ? <Check aria-hidden="true" /> : null}{item}
                     </button>
                   ))}
@@ -105,12 +164,21 @@ export function Collections() {
             </div>
           ) : null}
 
-          <div className="mt-12 grid grid-cols-1 gap-x-4 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
-            {visible.map((piece) => {
-              const wished = isWished(piece.id)
-              const sold = piece.availability === 'sold'
-              return (
-                <article key={piece.id} className="group">
+          <motion.div layout className="mt-12 grid grid-cols-1 gap-x-4 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
+            <AnimatePresence mode="popLayout">
+              {visible.map((piece) => {
+                const wished = isWished(piece.id)
+                const sold = piece.availability === 'sold'
+                return (
+                  <motion.article
+                    layout
+                    key={piece.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.28, ease: 'easeOut' }}
+                    className="group"
+                  >
                   <div className="relative aspect-[4/5] overflow-hidden bg-muted">
                     <Image src={piece.image} alt={piece.alt} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
                     <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-3">
@@ -137,15 +205,16 @@ export function Collections() {
                       <ShoppingBag aria-hidden="true" />
                     </button>
                   </div>
-                </article>
-              )
-            })}
-          </div>
+                  </motion.article>
+                )
+              })}
+            </AnimatePresence>
+          </motion.div>
 
           {visible.length === 0 ? (
             <div className="mt-12 border-y border-border py-20 text-center">
               <p className="font-serif text-4xl text-heading">No pieces match this edit.</p>
-              <button type="button" onClick={() => { setCategory('All'); setAvailability('all') }} className="mt-5 border-b border-foreground pb-1 text-xs uppercase tracking-[0.15em]">Clear filters</button>
+              <button type="button" onClick={() => { setCategory('All'); setSeries(null); setAvailability('all') }} className="mt-5 border-b border-foreground pb-1 text-xs uppercase tracking-[0.15em]">Clear filters</button>
             </div>
           ) : null}
         </div>
